@@ -204,6 +204,9 @@ public:
 
 	USaveSystemInteropBase* GetService(FName ServiceKey) const;
 
+	using FOnSubsystemInit = TDelegate<void(USaveSystemInteropBase*)>;
+	void SetOnServiceInit(FName ServiceKey, const FOnSubsystemInit& Callback);
+
 	FSaveSystemSlotEvent& GetPreSaveEvent() { return OnPreSaveLaunched; }
 	FSaveSystemSlotEvent& GetSaveEvent() { return OnSaveCompleted; }
 	FSaveSystemSlotEvent& GetLoadEvent() { return OnLoadCompleted; }
@@ -226,6 +229,8 @@ private:
 
 	TSubclassOf<UFaerieSaveCommand> SaveExecClass;
 	TSubclassOf<UFaerieLoadCommand> LoadExecClass;
+
+	TMultiMap<FName, FOnSubsystemInit> AwaitingInitialization;
 };
 
 UCLASS()

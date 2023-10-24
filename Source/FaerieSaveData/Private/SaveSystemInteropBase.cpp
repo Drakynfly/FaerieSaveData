@@ -130,18 +130,6 @@ void UFaerieLocalDataSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {
 	Super::Initialize(Collection);
 
-	auto&& DefaultServiceClass = GetDefault<UFaerieSaveDataSettings>()->BackendSystemClass.LoadSynchronous();
-	auto&& PersistanceServiceClass = GetDefault<UFaerieSaveDataSettings>()->PersistanceServiceClass.LoadSynchronous();
-
-	if (!ensureMsgf(DefaultServiceClass && DefaultServiceClass->IsChildOf<USaveSystemInteropBase>(),
-		TEXT("A valid interop class must be provided for FaerieLocalDataSubsystem to function. Please check project settings!")))
-	{
-		return;
-	}
-
-	InitSaveSystem(DefaultServiceClass, Faerie::SaveData::DefaultService);
-	InitSaveSystem(PersistanceServiceClass, Faerie::SaveData::PersistantService);
-
 	SaveExecClass = GetDefault<UFaerieSaveDataSettings>()->SaveExecClass.LoadSynchronous();
 	LoadExecClass = GetDefault<UFaerieSaveDataSettings>()->LoadExecClass.LoadSynchronous();
 
@@ -156,6 +144,23 @@ void UFaerieLocalDataSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 	{
 		return;
 	}
+
+	// Wait a tick before starting up backends, in case they need other subsystems to be ready.
+	GetWorld()->GetTimerManager().SetTimerForNextTick(
+		[this]
+		{
+			auto&& DefaultServiceClass = GetDefault<UFaerieSaveDataSettings>()->BackendSystemClass.LoadSynchronous();
+			auto&& PersistanceServiceClass = GetDefault<UFaerieSaveDataSettings>()->PersistanceServiceClass.LoadSynchronous();
+
+			if (!ensureMsgf(DefaultServiceClass && DefaultServiceClass->IsChildOf<USaveSystemInteropBase>(),
+				TEXT("A valid interop class must be provided for FaerieLocalDataSubsystem to function. Please check project settings!")))
+			{
+				return;
+			}
+
+			InitSaveSystem(DefaultServiceClass, Faerie::SaveData::DefaultService);
+			InitSaveSystem(PersistanceServiceClass, Faerie::SaveData::PersistantService);
+		});
 }
 
 USaveSystemInteropBase* UFaerieLocalDataSubsystem::GetService(const UObject* Obj, const FName ServiceKey)
@@ -221,6 +226,14 @@ USaveSystemInteropBase* UFaerieLocalDataSubsystem::InitSaveSystem(const TSubclas
 
 	Services.Add(Key, NewService);
 
+	TArray<FOnSubsystemInit> Callbacks;
+	AwaitingInitialization.MultiFind(Key, Callbacks);
+	AwaitingInitialization.Remove(Key);
+	for (auto&& Callback : Callbacks)
+	{
+		Callback.ExecuteIfBound(NewService);
+	}
+
 	return NewService;
 }
 
@@ -233,8 +246,27 @@ USaveSystemInteropBase* UFaerieLocalDataSubsystem::GetService(const FName Servic
 	return nullptr;
 }
 
+void UFaerieLocalDataSubsystem::SetOnServiceInit(const FName ServiceKey, const FOnSubsystemInit& Callback)
+{
+	if (!Callback.IsBound()) return;
+
+	if (auto&& Service = Services.Find(ServiceKey))
+	{
+		Callback.Execute(Service->Get());
+	}
+	else
+	{
+		AwaitingInitialization.Add(ServiceKey, Callback);
+	}
+}
+
 TInstancedStruct<FFaerieSaveSlotFragmentBase> UFaerieLocalDataSubsystem::GetSlotFragment(const FName ServiceKey, const UScriptStruct* Type, const FString& Slot) const
 {
+	if (!IsValid(Type))
+	{
+		return {};
+	}
+
 	TInstancedStruct<FFaerieSaveSlotFragmentBase> Out;
 
 	if (auto&& Service = GetService(ServiceKey);
