@@ -19,14 +19,14 @@ UFaerieLoadCommand* USaveSystemInteropBase::CreateLoadCommand(FStringView Slot, 
 		return nullptr;
 	}
 
-	State = LoadingInProgress;
-
 	UFaerieLoadCommand* LoadExec = NewObject<UFaerieLoadCommand>(this, GetOuterUFaerieLocalDataSubsystem()->LoadExecClass);
-
 	if (!ensureMsgf(LoadExec, TEXT("Cancelling LoadSlot_Impl: Unable to create SaveExec object!")))
 	{
 		return nullptr;
 	}
+
+	State = LoadingInProgress;
+	CommandInProgress = LoadExec;
 
 	LoadExec->SlotName = Slot;
 
@@ -53,13 +53,13 @@ UFaerieSaveCommand* USaveSystemInteropBase::CreateSaveCommand(FStringView Slot, 
 	}
 
 	UFaerieSaveCommand* SaveExec = NewObject<UFaerieSaveCommand>(this, GetOuterUFaerieLocalDataSubsystem()->SaveExecClass);
-
 	if (!ensureMsgf(SaveExec, TEXT("Cancelling SaveSlot_Impl: Unable to create SaveExec object!")))
 	{
 		return nullptr;
 	}
 
 	State = SavingInProgress;
+	CommandInProgress = SaveExec;
 
 	SaveExec->SlotName = Slot;
 
@@ -98,6 +98,7 @@ void USaveSystemInteropBase::NotifySaveEventFinished(const FStringView Slot, con
 		ServiceError(ErrorMessage);
 	}
 	State = None;
+	CommandInProgress = nullptr;
 }
 
 void USaveSystemInteropBase::NotifyLoadEventFinished(const FStringView Slot, const TOptional<FString>& Failure)
@@ -115,6 +116,7 @@ void USaveSystemInteropBase::NotifyLoadEventFinished(const FStringView Slot, con
 		ServiceError(ErrorMessage);
 	}
 	State = None;
+	CommandInProgress = nullptr;
 }
 
 UWorld* UFaerieLocalDataSubsystem::GetWorld() const

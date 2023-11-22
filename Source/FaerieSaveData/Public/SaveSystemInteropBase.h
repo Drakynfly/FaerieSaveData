@@ -75,7 +75,7 @@ public:
 	{
 		friend USaveSystemInteropBase;
 
-		FSlotQuery(const USaveSystemInteropBase& InteropBase, const TConstArrayView<UScriptStruct*>& Types)
+		FSlotQuery(const USaveSystemInteropBase& InteropBase, const TConstArrayView<const UScriptStruct*>& Types)
 		  : RelevantTypes(Types)
 		{
 			for (const TArray<FString> Slots = InteropBase.GetAllSlotsSorted();
@@ -117,31 +117,30 @@ public:
 		}
 
 		// Get the last slot in the list. If Sort is called previous to this, the highest scoring slot will be returned.
-		FString Best()
+		FSlotQuery& Best(FString& Slot)
 		{
-			if (SlotFragments.IsEmpty())
+			if (!SlotFragments.IsEmpty())
 			{
-				return FString();
+				Slot = SlotFragments.Last().Key;
 			}
 
-			return SlotFragments.Last().Key;
+			return *this;
 		}
 
 		// Get all slots remaining after any filtering.
-		TArray<FString> All() const
+		FSlotQuery& All(TArray<FString>& Slots)
 		{
-			TArray<FString> Slots;
 			Algo::Transform(SlotFragments, Slots,
 				[](const TPair<FString, FFragmentArray>& Pair){ return Pair.Key; } );
-			return Slots;
+			return *this;
 		}
 
 	private:
-		const TConstArrayView<UScriptStruct*> RelevantTypes;
+		const TConstArrayView<const UScriptStruct*> RelevantTypes;
 		TArray<TPair<FString, FFragmentArray>> SlotFragments;
 	};
 
-	FSlotQuery Query(const TConstArrayView<UScriptStruct*>& Types) const
+	FSlotQuery Query(const TConstArrayView<const UScriptStruct*>& Types) const
 	{
 		return FSlotQuery(*this, Types);
 	}
@@ -172,6 +171,10 @@ protected:
 	};
 
 	ESystemState State = None;
+
+private:
+	UPROPERTY()
+	TObjectPtr<UFaerieSaveDataCommandBase> CommandInProgress = nullptr;
 };
 
 

@@ -227,7 +227,7 @@ bool UEasyMultiSaveInterop::SaveSlot(const FStringView Slot, const FSaveSystemEv
 	UEMSObject* EMS = GetEMSInternal();
 	if (!IsValid(EMS)) return false;
 
-	SaveCommandResult = Result;
+	CommandResult = Result;
 
 	EMS->SetCurrentSaveGameName(Slot.GetData());
 
@@ -248,10 +248,12 @@ bool UEasyMultiSaveInterop::SaveSlot(const FStringView Slot, const FSaveSystemEv
 	return false;
 }
 
-bool UEasyMultiSaveInterop::LoadSlot(const FStringView Slot, FSaveSystemEventAsyncResult Result)
+bool UEasyMultiSaveInterop::LoadSlot(const FStringView Slot, const FSaveSystemEventAsyncResult Result)
 {
 	UEMSObject* EMS = GetEMSInternal();
 	if (!IsValid(EMS)) return false;
+
+	CommandResult = Result;
 
 	EMS->SetCurrentSaveGameName(Slot.GetData());
 	const UTimelinesEMSInfoSaveGame* LoadedSaveData = Cast<UTimelinesEMSInfoSaveGame>(EMS->GetSlotInfoObject(FString())); // An empty string will return the current slot.
@@ -297,24 +299,27 @@ bool UEasyMultiSaveInterop::DeleteSlot(const FStringView Slot, FSaveSystemEventA
 
 void UEasyMultiSaveInterop::OnSaveComplete()
 {
-	if (SaveCommandResult.IsBound())
+	if (CommandResult.IsBound())
 	{
-		SaveCommandResult.Execute(true);
+		CommandResult.Execute(true);
 	}
+	CommandResult = nullptr;
 }
 
 void UEasyMultiSaveInterop::OnLoadComplete()
 {
-	if (LoadCommandResult.IsBound())
+	if (CommandResult.IsBound())
 	{
-		LoadCommandResult.Execute(true);
+		CommandResult.Execute(true);
 	}
+	CommandResult = nullptr;
 }
 
 void UEasyMultiSaveInterop::OnLoadFailed()
 {
-	if (LoadCommandResult.IsBound())
+	if (CommandResult.IsBound())
 	{
-		LoadCommandResult.Execute(false);
+		CommandResult.Execute(false);
 	}
+	CommandResult = nullptr;
 }

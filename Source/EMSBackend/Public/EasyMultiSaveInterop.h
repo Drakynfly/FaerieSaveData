@@ -85,7 +85,5 @@ private:
 
 	mutable TWeakObjectPtr<UEMSObject> EasyMultiSave;
 
-	// @todo can both of these be running at once?
-	FSaveSystemEventAsyncResult SaveCommandResult;
-	FSaveSystemEventAsyncResult LoadCommandResult;
+	FSaveSystemEventAsyncResult CommandResult;
 };
