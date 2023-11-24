@@ -4,7 +4,7 @@
 
 #include "StructView.h"
 #include "Algo/RemoveIf.h"
-#include "UObject/Object.h"
+#include "Subsystems/WorldSubsystem.h"
 #include "SaveSystemInteropBase.generated.h"
 
 using FSaveSystemSlotEvent = TMulticastDelegate<void(FStringView)>;

@@ -20,12 +20,12 @@ FUnlocksArray& FFaerieLocalUnlocks::FindOrAddUnlocksArray(const TSoftClassPtr<UU
 	return UnlockedFeatures.FindOrAdd(Class);
 }
 
-bool UFaerieUnlockablesLibrary::IsFeatureUnlocked(UObject* Obj, const TSoftObjectPtr<UUnlockableAssetBase>& Feature)
+bool UFaerieUnlockablesLibrary::IsFeatureUnlocked(const UObject* Obj, const TSoftObjectPtr<UUnlockableAssetBase>& Feature)
 {
 	return GetUnlockedFeaturesOfClass(Obj, Feature->GetClass()).Unlocks.Contains(Feature);
 }
 
-FUnlocksArray UFaerieUnlockablesLibrary::GetUnlockedFeaturesOfClass(UObject* Obj, const TSoftClassPtr<UUnlockableAssetBase>& Feature)
+FUnlocksArray UFaerieUnlockablesLibrary::GetUnlockedFeaturesOfClass(const UObject* Obj, const TSoftClassPtr<UUnlockableAssetBase>& Feature)
 {
 	auto&& Service = UFaerieLocalDataSubsystem::GetService(Obj, Faerie::SaveData::PersistantService);
 	if (!IsValid(Service))
@@ -33,13 +33,16 @@ FUnlocksArray UFaerieUnlockablesLibrary::GetUnlockedFeaturesOfClass(UObject* Obj
 		return FUnlocksArray();
 	}
 
-	auto&& Unlocks = Service->GetFragmentData<FFaerieLocalUnlocks>();
-
-	if (auto&& List = Unlocks.Get<const FFaerieLocalUnlocks>().FindUnlocksArray(Feature->GetClass());
-		List.IsValid())
+	if (auto&& Unlocks = Service->GetFragmentData<FFaerieLocalUnlocks>();
+		Unlocks.IsValid())
 	{
-		return List.Get<const FUnlocksArray>();
+		if (auto&& List = Unlocks.Get<const FFaerieLocalUnlocks>().FindUnlocksArray(Feature->GetClass());
+			List.IsValid())
+		{
+			return List.Get<const FUnlocksArray>();
+		}
 	}
+
 	return FUnlocksArray();
 }
 

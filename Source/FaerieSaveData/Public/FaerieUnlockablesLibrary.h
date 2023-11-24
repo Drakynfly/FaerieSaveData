@@ -41,10 +41,10 @@ class FAERIESAVEDATA_API UFaerieUnlockablesLibrary : public UBlueprintFunctionLi
 
 public:
 	UFUNCTION(BlueprintPure, Category = "Unlocked Features", meta = (WorldContext = Obj))
-	static bool IsFeatureUnlocked(UObject* Obj, const TSoftObjectPtr<UUnlockableAssetBase>& Feature);
+	static bool IsFeatureUnlocked(const UObject* Obj, const TSoftObjectPtr<UUnlockableAssetBase>& Feature);
 
 	UFUNCTION(BlueprintCallable, Category = "Unlocked Features", meta = (WorldContext = Obj))
-	static FUnlocksArray GetUnlockedFeaturesOfClass(UObject* Obj, const TSoftClassPtr<UUnlockableAssetBase>& Feature);
+	static FUnlocksArray GetUnlockedFeaturesOfClass(const UObject* Obj, const TSoftClassPtr<UUnlockableAssetBase>& Feature);
 
 	UFUNCTION(BlueprintCallable, Category = "Unlocked Features", meta = (WorldContext = Obj))
 	static void AddUnlockedFeature(UObject* Obj, TSoftObjectPtr<UUnlockableAssetBase> Feature);
