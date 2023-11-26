@@ -66,6 +66,7 @@ class UEasyMultiSaveInterop : public USaveSystemInteropBase
 	UEMSObject* GetEMSInternal() const;
 
 public:
+	virtual TOptional<FDateTime> GetTimestamp(FStringView Slot) const override;
 	virtual FConstStructView GetFragmentData(const UScriptStruct* Type, FStringView Slot) const override;
 	virtual void EditFragmentData(const UScriptStruct* Type, FStringView Slot, const TFunctionRef<void(FStructView)>& Edit) override;
 	virtual TArray<FString> GetAllSlotsSorted() const override;

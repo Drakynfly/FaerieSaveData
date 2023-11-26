@@ -32,6 +32,9 @@ class FAERIESAVEDATA_API USaveSystemInteropBase : public UObject
 public:
 	USaveSystemInteropBase() {}
 
+	virtual TOptional<FDateTime> GetTimestamp(FStringView Slot) const
+		PURE_VIRTUAL(USaveSystemInteropBase::GetTimestamp, return FDateTime(); )
+
 	/* Get fragment  */
 	virtual FConstStructView GetFragmentData(const UScriptStruct* Type, FStringView Slot = FString()) const
 		PURE_VIRTUAL(USaveSystemInteropBase::GetFragmentData, return FConstStructView(); )
@@ -214,9 +217,12 @@ public:
 	FSaveSystemSlotEvent& GetSaveEvent() { return OnSaveCompleted; }
 	FSaveSystemSlotEvent& GetLoadEvent() { return OnLoadCompleted; }
 
+	UFUNCTION(BlueprintCallable, Category = "Faerie|LocalData")
+	FDateTime GetSlotTimestamp(FName ServiceKey, const FString& Slot) const;
+
 	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Faerie|LocalData", meta = (AutoCreateRefTerm = "Slot"))
 	TInstancedStruct<FFaerieSaveSlotFragmentBase> GetSlotFragment(FName ServiceKey,
-		UPARAM(meta = (AllowedClasses = "/Script/FaerieSaveData/FaerieSaveSlotFragmentBase")) const UScriptStruct* Type, const FString& Slot) const;
+		UPARAM(meta = (MetaClass = "/Script/FaerieSaveData/FaerieSaveSlotFragmentBase")) const UScriptStruct* Type, const FString& Slot) const;
 
 protected:
 	UPROPERTY(BlueprintAssignable, Category = "Events")

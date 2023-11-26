@@ -262,6 +262,21 @@ void UFaerieLocalDataSubsystem::SetOnServiceInit(const FName ServiceKey, const F
 	}
 }
 
+FDateTime UFaerieLocalDataSubsystem::GetSlotTimestamp(const FName ServiceKey, const FString& Slot) const
+{
+	if (auto&& Service = GetService(ServiceKey);
+		IsValid(Service))
+	{
+		if (const TOptional<FDateTime> Timestamp = Service->GetTimestamp(Slot);
+			Timestamp.IsSet())
+		{
+			return Timestamp.GetValue();
+		}
+	}
+
+	return FDateTime();
+}
+
 TInstancedStruct<FFaerieSaveSlotFragmentBase> UFaerieLocalDataSubsystem::GetSlotFragment(const FName ServiceKey, const UScriptStruct* Type, const FString& Slot) const
 {
 	if (!IsValid(Type))

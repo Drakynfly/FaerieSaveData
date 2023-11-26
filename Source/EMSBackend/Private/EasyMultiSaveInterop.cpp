@@ -86,6 +86,23 @@ UEMSObject* UEasyMultiSaveInterop::GetEMSInternal() const
 	return EasyMultiSave.Get();
 }
 
+TOptional<FDateTime> UEasyMultiSaveInterop::GetTimestamp(const FStringView Slot) const
+{
+	UEMSObject* EMS = GetEMSInternal();
+	if (!IsValid(EMS))
+	{
+		return TOptional<FDateTime>();
+	}
+
+	if (auto&& InfoObject = EMS->GetSlotInfoObject(Slot.GetData());
+		IsValid(InfoObject))
+	{
+		return InfoObject->SlotInfo.TimeStamp;
+	}
+
+	return TOptional<FDateTime>();
+}
+
 FConstStructView UEasyMultiSaveInterop::GetFragmentData(const UScriptStruct* Type, const FStringView Slot) const
 {
 	UEMSObject* EMS = GetEMSInternal();
