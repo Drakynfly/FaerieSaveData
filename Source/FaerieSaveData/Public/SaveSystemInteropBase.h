@@ -2,6 +2,7 @@
 
 #pragma once
 
+#include "FaerieSaveSlotFragment.h"
 #include "StructView.h"
 #include "Algo/RemoveIf.h"
 #include "Subsystems/WorldSubsystem.h"
@@ -9,7 +10,6 @@
 
 using FSaveSystemSlotEvent = TMulticastDelegate<void(FStringView)>;
 
-struct FFaerieSaveSlotFragmentBase;
 class UFaerieLocalDataSubsystem;
 class UFaerieSaveCommand;
 class UFaerieLoadCommand;
