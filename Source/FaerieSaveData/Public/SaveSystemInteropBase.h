@@ -20,7 +20,8 @@ namespace Faerie::SaveData
 	static const FName PersistantService = FName(TEXTVIEW("PERSISTANT"));
 }
 
-DECLARE_DELEGATE_OneParam(FSaveSystemEventAsyncResult, bool)
+DECLARE_DELEGATE_OneParam(FSaveSystemEventAsyncResult, bool);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FDynamicSaveSystemSlotEvent, FString, SlotName);
 
 UCLASS(Abstract, Within = FaerieLocalDataSubsystem)
 class FAERIESAVEDATA_API USaveSystemInteropBase : public UObject
@@ -28,6 +29,7 @@ class FAERIESAVEDATA_API USaveSystemInteropBase : public UObject
 	GENERATED_BODY()
 
 	friend class UFaerieSaveDataCommandBase;
+	friend UFaerieLocalDataSubsystem;
 
 public:
 	USaveSystemInteropBase() {}
@@ -65,6 +67,8 @@ public:
 	virtual bool LoadSlot(FStringView Slot, FSaveSystemEventAsyncResult Result) PURE_VIRTUAL(USaveSystemInteropBase::LoadSlot, return false; )
 
 	virtual bool DeleteSlot(FStringView Slot, FSaveSystemEventAsyncResult Result) PURE_VIRTUAL(USaveSystemInteropBase::DeleteSlot, return false; )
+
+	bool HasKey(const FName Key) const { return Keys.Contains(Key); }
 
 	UFaerieLoadCommand* CreateLoadCommand(FStringView Slot, bool StallRunning);
 	UFaerieSaveCommand* CreateSaveCommand(FStringView Slot, bool StallRunning);
@@ -161,10 +165,15 @@ protected:
 	void NotifySaveEventFinished(FStringView Slot, const TOptional<FString>& Failure);
 	void NotifyLoadEventFinished(FStringView Slot, const TOptional<FString>& Failure);
 
+	// Native callbacks
 	FSaveSystemSlotEvent OnPreSlotSaveLaunched;
 	FSaveSystemSlotEvent OnSaveCompletedDelegate;
 	FSaveSystemSlotEvent OnLoadCompletedDelegate;
 	FSaveSystemSlotEvent OnErrorDelegate;
+
+private:
+	UPROPERTY()
+	TObjectPtr<UFaerieSaveDataCommandBase> CommandInProgress = nullptr;
 
 	enum ESystemState
 	{
@@ -175,13 +184,12 @@ protected:
 
 	ESystemState State = None;
 
-private:
-	UPROPERTY()
-	TObjectPtr<UFaerieSaveDataCommandBase> CommandInProgress = nullptr;
+	TSet<FName> Keys;
 };
 
+using FSaveSystemServiceEvent = TMulticastDelegate<void(USaveSystemInteropBase*, FStringView)>;
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FFaerieSaveSystemError, const FString&, Message);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FFaerieSaveSystemError, FName, Service, const FString&, Message);
 
 UCLASS()
 class FAERIESAVEDATA_API UFaerieLocalDataSubsystem : public UGameInstanceSubsystem
@@ -213,9 +221,9 @@ public:
 	using FOnSubsystemInit = TDelegate<void(USaveSystemInteropBase*)>;
 	void SetOnServiceInit(FName ServiceKey, const FOnSubsystemInit& Callback);
 
-	FSaveSystemSlotEvent& GetPreSaveEvent() { return OnPreSaveLaunched; }
-	FSaveSystemSlotEvent& GetSaveEvent() { return OnSaveCompleted; }
-	FSaveSystemSlotEvent& GetLoadEvent() { return OnLoadCompleted; }
+	FSaveSystemServiceEvent& GetPreSaveEvent() { return OnPreSaveLaunched; }
+	FSaveSystemServiceEvent& GetSaveEvent() { return OnSaveCompleted; }
+	FSaveSystemServiceEvent& GetLoadEvent() { return OnLoadCompleted; }
 
 	UFUNCTION(BlueprintCallable, Category = "Faerie|LocalData")
 	FDateTime GetSlotTimestamp(FName ServiceKey, const FString& Slot) const;
@@ -228,10 +236,18 @@ protected:
 	UPROPERTY(BlueprintAssignable, Category = "Events")
 	FFaerieSaveSystemError OnServiceError;
 
+	// Broadcast after a successful save command.
+	UPROPERTY(BlueprintAssignable, Category = "Events")
+	FDynamicSaveSystemSlotEvent OnSaveComplete;
+
+	// Broadcast after a successful load command.
+	UPROPERTY(BlueprintAssignable, Category = "Events")
+	FDynamicSaveSystemSlotEvent OnLoadComplete;
+
 private:
-	FSaveSystemSlotEvent OnPreSaveLaunched;
-	FSaveSystemSlotEvent OnSaveCompleted;
-	FSaveSystemSlotEvent OnLoadCompleted;
+	FSaveSystemServiceEvent OnPreSaveLaunched;
+	FSaveSystemServiceEvent OnSaveCompleted;
+	FSaveSystemServiceEvent OnLoadCompleted;
 
 	UPROPERTY()
 	TMap<FName, TObjectPtr<USaveSystemInteropBase>> Services;

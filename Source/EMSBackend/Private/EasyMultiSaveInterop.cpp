@@ -122,7 +122,7 @@ FConstStructView UEasyMultiSaveInterop::GetFragmentData(const UScriptStruct* Typ
 		// EMS must have the slot as current in order to fetch per-slot custom data.
 		EMS->SetCurrentSaveGameName(Slot.GetData());
 
-		const UTimelinesEMSInfoSaveGame* LoadedSaveData = Cast<UTimelinesEMSInfoSaveGame>(EMS->GetSlotInfoObject(Slot.GetData()));
+		auto&& LoadedSaveData = Cast<UTimelinesEMSInfoSaveGame>(EMS->GetSlotInfoObject(Slot.GetData()));
 		if (!IsValid(LoadedSaveData))
 		{
 			ServiceError(TEXTVIEW("Slot info is invalid. Make sure TimelinesEMSInfoSaveGame is selected as Info Class in project Settings"));
@@ -137,7 +137,8 @@ FConstStructView UEasyMultiSaveInterop::GetFragmentData(const UScriptStruct* Typ
 		if (Slot.IsEmpty())
 		{
 			// Load global data if slot is empty
-			if (const UTimelinesEMSGlobalCustomSaveGame* LoadedSaveData = Cast<UTimelinesEMSGlobalCustomSaveGame>(EMS->GetCustomSave(UTimelinesEMSGlobalCustomSaveGame::StaticClass())))
+			if (auto&& LoadedSaveData =
+					Cast<UTimelinesEMSGlobalCustomSaveGame>(EMS->GetCustomSave(UTimelinesEMSGlobalCustomSaveGame::StaticClass())))
 			{
 				return LoadedSaveData->GetFragmentData(Type);
 			}
@@ -148,7 +149,8 @@ FConstStructView UEasyMultiSaveInterop::GetFragmentData(const UScriptStruct* Typ
 			EMS->SetCurrentSaveGameName(Slot.GetData());
 
 			// Load custom save for the slot
-			if (const UTimelinesEMSCustomSaveGame* LoadedSaveData = Cast<UTimelinesEMSCustomSaveGame>(EMS->GetCustomSave(UTimelinesEMSCustomSaveGame::StaticClass())))
+			if (auto&& LoadedSaveData =
+					Cast<UTimelinesEMSCustomSaveGame>(EMS->GetCustomSave(UTimelinesEMSCustomSaveGame::StaticClass())))
 			{
 				return LoadedSaveData->GetFragmentData(Type);
 			}
@@ -178,7 +180,7 @@ void UEasyMultiSaveInterop::EditFragmentData(const UScriptStruct* Type, const FS
 		// EMS must have the slot as current in order to fetch per-slot custom data.
 		EMS->SetCurrentSaveGameName(Slot.GetData());
 
-		UTimelinesEMSInfoSaveGame* LoadedSaveData = Cast<UTimelinesEMSInfoSaveGame>(EMS->GetSlotInfoObject(Slot.GetData()));
+		auto&& LoadedSaveData = Cast<UTimelinesEMSInfoSaveGame>(EMS->GetSlotInfoObject(Slot.GetData()));
 		if (!IsValid(LoadedSaveData))
 		{
 			ServiceError(TEXTVIEW("Slot info is invalid. Make sure TimelinesEMSInfoSaveGame is selected as Info Class in project Settings"));
@@ -201,7 +203,7 @@ void UEasyMultiSaveInterop::EditFragmentData(const UScriptStruct* Type, const FS
 		if (Slot.IsEmpty())
 		{
 			// Load global data if slot is empty
-			if (UTimelinesEMSGlobalCustomSaveGame* LoadedSaveData = Cast<UTimelinesEMSGlobalCustomSaveGame>(EMS->GetCustomSave(UTimelinesEMSGlobalCustomSaveGame::StaticClass())))
+			if (auto&& LoadedSaveData = Cast<UTimelinesEMSGlobalCustomSaveGame>(EMS->GetCustomSave(UTimelinesEMSGlobalCustomSaveGame::StaticClass())))
 			{
 				if (auto&& Fragment = LoadedSaveData->GetMutableFragmentData(Type);
 					Fragment.IsValid())
@@ -216,7 +218,7 @@ void UEasyMultiSaveInterop::EditFragmentData(const UScriptStruct* Type, const FS
 			EMS->SetCurrentSaveGameName(Slot.GetData());
 
 			// Load custom save for the slot
-			UTimelinesEMSCustomSaveGame* LoadedSaveData = Cast<UTimelinesEMSCustomSaveGame>(EMS->GetCustomSave(UTimelinesEMSCustomSaveGame::StaticClass()));
+			auto&& LoadedSaveData = Cast<UTimelinesEMSCustomSaveGame>(EMS->GetCustomSave(UTimelinesEMSCustomSaveGame::StaticClass()));
 			if (!IsValid(LoadedSaveData))
 			{
 				ServiceError(TEXTVIEW("Failed to retrieve custom slot save data!"));
@@ -273,7 +275,7 @@ bool UEasyMultiSaveInterop::LoadSlot(const FStringView Slot, const FSaveSystemEv
 	CommandResult = Result;
 
 	EMS->SetCurrentSaveGameName(Slot.GetData());
-	const UTimelinesEMSInfoSaveGame* LoadedSaveData = Cast<UTimelinesEMSInfoSaveGame>(EMS->GetSlotInfoObject(FString())); // An empty string will return the current slot.
+	auto&& LoadedSaveData = Cast<UTimelinesEMSInfoSaveGame>(EMS->GetSlotInfoObject(FString())); // An empty string will return the current slot.
 	check(Slot == EMS->CurrentSaveGameName);
 
 	// Make sure we are in the level for this save game to load into.

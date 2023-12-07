@@ -195,6 +195,7 @@ USaveSystemInteropBase* UFaerieLocalDataSubsystem::InitSaveSystem(const TSubclas
 	{
 		if (Element.Value.IsA(Class))
 		{
+			Element.Value->Keys.Add(Key);
 			return Services.Add(Key, Element.Value);
 		}
 	}
@@ -203,30 +204,33 @@ USaveSystemInteropBase* UFaerieLocalDataSubsystem::InitSaveSystem(const TSubclas
 	check(NewService);
 
 	NewService->GetOnPreSlotSavedEvent().AddWeakLambda(this,
-		[this](const FStringView Slot)
+		[this, NewService](const FStringView Slot)
 		{
-			OnPreSaveLaunched.Broadcast(Slot);
+			OnPreSaveLaunched.Broadcast(NewService, Slot);
 		});
 
 	NewService->GetOnLoadCompletedEvent().AddWeakLambda(this,
-		[this](const FStringView Slot)
+		[this, NewService](const FStringView Slot)
 		{
-			OnLoadCompleted.Broadcast(Slot);
+			OnLoadCompleted.Broadcast(NewService, Slot);
+			OnLoadComplete.Broadcast(FString(Slot));
 		});
 
 	NewService->GetOnSaveCompletedEvent().AddWeakLambda(this,
-		[this](const FStringView Slot)
+		[this, NewService](const FStringView Slot)
 		{
-			OnSaveCompleted.Broadcast(Slot);
+			OnSaveCompleted.Broadcast(NewService, Slot);
+			OnSaveComplete.Broadcast(FString(Slot));
 		});
 
 	NewService->GetOnErrorEvent().AddWeakLambda(this,
-		[this, Service = TWeakObjectPtr<USaveSystemInteropBase>(NewService)](const FStringView Slot)
+		[this, Key](const FStringView Slot)
 		{
-			OnServiceError.Broadcast(FString(Slot));
+			OnServiceError.Broadcast(Key, FString(Slot));
 		});
 
 	Services.Add(Key, NewService);
+	NewService->Keys.Add(Key);
 
 	TArray<FOnSubsystemInit> Callbacks;
 	AwaitingInitialization.MultiFind(Key, Callbacks);
