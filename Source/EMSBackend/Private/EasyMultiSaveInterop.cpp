@@ -138,19 +138,19 @@ FConstStructView UEasyMultiSaveInterop::GetFragmentData(const UScriptStruct* Typ
 		{
 			// Load global data if slot is empty
 			if (auto&& LoadedSaveData =
-					Cast<UTimelinesEMSGlobalCustomSaveGame>(EMS->GetCustomSave(UTimelinesEMSGlobalCustomSaveGame::StaticClass())))
+					Cast<UTimelinesEMSGlobalCustomSaveGame>(EMS->GetCustomSave(UTimelinesEMSGlobalCustomSaveGame::StaticClass(), FString(), FString())))
 			{
 				return LoadedSaveData->GetFragmentData(Type);
 			}
 		}
 		else
 		{
-			// EMS must have the slot as current in order to fetch per-slot custom data.
-			EMS->SetCurrentSaveGameName(Slot.GetData());
+			// EMS must have the slot as current in order to fetch per-slot custom data. (no longer true, now parameter of GetCustomSave)
+			//EMS->SetCurrentSaveGameName(Slot.GetData());
 
 			// Load custom save for the slot
 			if (auto&& LoadedSaveData =
-					Cast<UTimelinesEMSCustomSaveGame>(EMS->GetCustomSave(UTimelinesEMSCustomSaveGame::StaticClass())))
+					Cast<UTimelinesEMSCustomSaveGame>(EMS->GetCustomSave(UTimelinesEMSCustomSaveGame::StaticClass(), Slot.GetData(), FString())))
 			{
 				return LoadedSaveData->GetFragmentData(Type);
 			}
@@ -203,7 +203,7 @@ void UEasyMultiSaveInterop::EditFragmentData(const UScriptStruct* Type, const FS
 		if (Slot.IsEmpty())
 		{
 			// Load global data if slot is empty
-			if (auto&& LoadedSaveData = Cast<UTimelinesEMSGlobalCustomSaveGame>(EMS->GetCustomSave(UTimelinesEMSGlobalCustomSaveGame::StaticClass())))
+			if (auto&& LoadedSaveData = Cast<UTimelinesEMSGlobalCustomSaveGame>(EMS->GetCustomSave(UTimelinesEMSGlobalCustomSaveGame::StaticClass(), FString(), FString())))
 			{
 				if (auto&& Fragment = LoadedSaveData->GetMutableFragmentData(Type);
 					Fragment.IsValid())
@@ -214,11 +214,11 @@ void UEasyMultiSaveInterop::EditFragmentData(const UScriptStruct* Type, const FS
 		}
 		else
 		{
-			// EMS must have the slot as current in order to fetch per-slot custom data.
-			EMS->SetCurrentSaveGameName(Slot.GetData());
+			// EMS must have the slot as current in order to fetch per-slot custom data. (no longer true, now parameter of GetCustomSave)
+			//EMS->SetCurrentSaveGameName(Slot.GetData());
 
 			// Load custom save for the slot
-			auto&& LoadedSaveData = Cast<UTimelinesEMSCustomSaveGame>(EMS->GetCustomSave(UTimelinesEMSCustomSaveGame::StaticClass()));
+			auto&& LoadedSaveData = Cast<UTimelinesEMSCustomSaveGame>(EMS->GetCustomSave(UTimelinesEMSCustomSaveGame::StaticClass(), Slot.GetData(), FString()));
 			if (!IsValid(LoadedSaveData))
 			{
 				ServiceError(TEXTVIEW("Failed to retrieve custom slot save data!"));
@@ -250,7 +250,7 @@ bool UEasyMultiSaveInterop::SaveSlot(const FStringView Slot, const FSaveSystemEv
 
 	EMS->SetCurrentSaveGameName(Slot.GetData());
 
-	if (auto&& CustomSave = EMS->GetCustomSave(UTimelinesEMSCustomSaveGame::StaticClass()))
+	if (auto&& CustomSave = EMS->GetCustomSave(UTimelinesEMSCustomSaveGame::StaticClass(), Slot.GetData(), FString()))
 	{
 		EMS->SaveCustom(CustomSave);
 	}
@@ -283,7 +283,8 @@ bool UEasyMultiSaveInterop::LoadSlot(const FStringView Slot, const FSaveSystemEv
 	// level is the same.
 	if (LoadedSaveData->SlotInfo.Level != EMS->GetLevelName())
 	{
-		UE_LOG(LogEasyMultiSave, Warning,
+		// @todo logtemp replace
+		UE_LOG(LogTemp, Warning,
 			TEXT("Not in the correct level to load the current save.\nSaveInfo.Name : %s\nSaveInfo.Level : %s\nLevelName : %s"),
 				*LoadedSaveData->SlotInfo.Name, *LoadedSaveData->SlotInfo.Level.ToString(), *EMS->GetLevelName().ToString())
 		return false;
@@ -313,7 +314,8 @@ bool UEasyMultiSaveInterop::DeleteSlot(const FStringView Slot, FSaveSystemEventA
 	{
 		return false;
 	}
-	return EMS->DeleteAllSaveDataForSlot(Slot.GetData());
+	EMS->DeleteAllSaveDataForSlot(Slot.GetData());
+	return true;
 }
 
 void UEasyMultiSaveInterop::OnSaveComplete()

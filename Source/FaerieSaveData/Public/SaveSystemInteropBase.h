@@ -105,7 +105,7 @@ public:
 	public:
 		FSlotQuery& Filter(FSlotPredicate Predicate)
 		{
-			Algo::RemoveIf(SlotFragments,
+			(void)Algo::RemoveIf(SlotFragments,
 				[Predicate](const TPair<FString, FFragmentArray>& Pair)
 				{
 					return !Predicate(Pair.Value);
