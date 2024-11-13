@@ -12,7 +12,6 @@ public class FaerieSaveData : ModuleRules
 			new []
 			{
 				"Core",
-				"StructUtils",
 				"DeveloperSettings"
 			});
 

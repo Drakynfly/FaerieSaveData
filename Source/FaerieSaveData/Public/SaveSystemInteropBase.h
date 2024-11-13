@@ -3,7 +3,7 @@
 #pragma once
 
 #include "FaerieSaveSlotFragment.h"
-#include "StructView.h"
+#include "StructUtils/StructView.h"
 #include "Algo/RemoveIf.h"
 #include "Subsystems/WorldSubsystem.h"
 #include "SaveSystemInteropBase.generated.h"

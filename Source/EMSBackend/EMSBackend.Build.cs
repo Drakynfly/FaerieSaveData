@@ -13,8 +13,7 @@ public class EMSBackend : ModuleRules
             {
                 "Core",
                 "EasyMultiSave",
-                "FaerieSaveData",
-                "StructUtils"
+                "FaerieSaveData"
             }
         );
 

@@ -3,7 +3,7 @@
 #pragma once
 
 #include "FaerieSaveSlotFragment.h"
-#include "StructView.h"
+#include "StructUtils/StructView.h"
 #include "Kismet/BlueprintFunctionLibrary.h"
 #include "FaerieUnlockablesLibrary.generated.h"
 
