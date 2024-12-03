@@ -26,8 +26,8 @@ struct FAERIESAVEDATA_API FFaerieLocalUnlocks : public FFaerieSaveSlotDataFragme
 	UPROPERTY()
 	TMap<TSoftClassPtr<UUnlockableAssetBase>, FUnlocksArray> UnlockedFeatures;
 
-	FConstStructView FindUnlocksArray(const TSoftClassPtr<UUnlockableAssetBase>& Class) const;
-	FStructView FindUnlocksArray(const TSoftClassPtr<UUnlockableAssetBase>& Class);
+	TConstStructView<FUnlocksArray> FindUnlocksArray(const TSoftClassPtr<UUnlockableAssetBase>& Class) const;
+	TStructView<FUnlocksArray> FindUnlocksArray(const TSoftClassPtr<UUnlockableAssetBase>& Class);
 	FUnlocksArray& FindOrAddUnlocksArray(const TSoftClassPtr<UUnlockableAssetBase>& Class);
 };
 

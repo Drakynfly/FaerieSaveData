@@ -42,10 +42,15 @@ public:
 		PURE_VIRTUAL(USaveSystemInteropBase::GetFragmentData, return FConstStructView(); )
 
 	template <typename T>
-	FConstStructView GetFragmentData(FStringView Slot = FString()) const
+	TConstStructView<T> GetFragmentData(FStringView Slot = FString()) const
 	{
 		static_assert(TIsDerivedFrom<T, FFaerieSaveSlotFragmentBase>::Value, "T must derive from FFaerieSaveSlotFragmentBase");
-		return GetFragmentData(TBaseStructure<T>::Get(), Slot);
+		const FConstStructView View = GetFragmentData(TBaseStructure<T>::Get(), Slot);
+		if (View.IsValid())
+		{
+			return View.Get<const T>();
+		}
+		return TConstStructView<T>();
 	}
 
 	virtual void EditFragmentData(const UScriptStruct* Type, FStringView Slot, const TFunctionRef<void(FStructView)>& Edit)

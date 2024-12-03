@@ -5,14 +5,14 @@
 
 #include "UnlockableAssetBase.h"
 
-FConstStructView FFaerieLocalUnlocks::FindUnlocksArray(const TSoftClassPtr<UUnlockableAssetBase>& Class) const
+TConstStructView<FUnlocksArray> FFaerieLocalUnlocks::FindUnlocksArray(const TSoftClassPtr<UUnlockableAssetBase>& Class) const
 {
-	return UnlockedFeatures.Contains(Class) ? FConstStructView::Make(UnlockedFeatures[Class]) : FConstStructView();
+	return UnlockedFeatures.Contains(Class) ? UnlockedFeatures[Class] : TConstStructView<FUnlocksArray>();
 }
 
-FStructView FFaerieLocalUnlocks::FindUnlocksArray(const TSoftClassPtr<UUnlockableAssetBase>& Class)
+TStructView<FUnlocksArray> FFaerieLocalUnlocks::FindUnlocksArray(const TSoftClassPtr< UUnlockableAssetBase>& Class)
 {
-	return UnlockedFeatures.Contains(Class) ? FStructView::Make(UnlockedFeatures[Class]) : FStructView();
+	return UnlockedFeatures.Contains(Class) ? UnlockedFeatures[Class] : TStructView<FUnlocksArray>();
 }
 
 FUnlocksArray& FFaerieLocalUnlocks::FindOrAddUnlocksArray(const TSoftClassPtr<UUnlockableAssetBase>& Class)
@@ -36,10 +36,10 @@ FUnlocksArray UFaerieUnlockablesLibrary::GetUnlockedFeaturesOfClass(const UObjec
 	if (auto&& Unlocks = Service->GetFragmentData<FFaerieLocalUnlocks>();
 		Unlocks.IsValid())
 	{
-		if (auto&& List = Unlocks.Get<const FFaerieLocalUnlocks>().FindUnlocksArray(Feature->GetClass());
+		if (auto&& List = Unlocks.Get().FindUnlocksArray(Feature->GetClass());
 			List.IsValid())
 		{
-			return List.Get<const FUnlocksArray>();
+			return List.Get();
 		}
 	}
 
